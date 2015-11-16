@@ -4,14 +4,15 @@
   "description": "Extensible facebook chat bot.",
   "main": "main.js",
   "dependencies": {
+    "body-parser": "*",
     "express": "*",
     "facebook-chat-api": "1.0.2",
     "git-pull": "*",
+    "hipchatter": "^0.2.0",
     "quarantine": "*",
     "redwrap": "*",
     "request": "*",
-    "require-install": "*",
-    "body-parser": "*"
+    "require-install": "*"
   },
   "devDependencies": {},
   "scripts": {
