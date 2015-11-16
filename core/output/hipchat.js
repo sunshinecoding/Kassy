@@ -1,6 +1,11 @@
 var HipChatter = require('hipchatter'),
   hipchatter = null,
-  webhook = null;
+  webhook = null,
+  express = require('express'),
+  app = null,
+  server = null,
+	shim = require("../shim.js"),
+  platform = null;
 
 exports.sendMessage = function(message, thread) {
   var notifyConfig = {
@@ -9,7 +14,7 @@ exports.sendMessage = function(message, thread) {
     token: exports.config.hipchat_auth_token
   };
 
-  hipchatter.notify(exports.config.hipchat_room, notifyConfig, function(err){
+  hipchatter.notify(thread, notifyConfig, function(err){
       if (err) {
         throw 'Failed to send message to room.';
       }
@@ -21,9 +26,25 @@ exports.sendUrl = function(url, thread) {
 };
 
 exports.sendImage = function(type, image, description, thread) {
+  switch (type) {
+    case 'url':
+      exports.sendMessage('<p>' + description + '</p><img src="' + url + '" alt="' + description + '">' + description + '</img>', thread);
+      break;
+    case 'file':
+      exports.sendMessage("I want to send a file to you but cant on this platform...");
+      break;
+  }
 };
 
 exports.sendFile = function(type, file, description, thread) {
+  switch (type) {
+    case 'url':
+      exports.sendMessage('<p>' + description + '</p><a href="' + url + '" alt="' + description + '">' + description + '</a>', thread);
+      break;
+    case 'file':
+      exports.sendMessage("I want to send a file to you but cant on this platform...");
+      break;
+  }
 };
 
 exports.setTitle = function(title, thread) {
@@ -44,6 +65,26 @@ exports.start = function(callback) {
     name: 'kassy_webhook'
   };
 
+  platform = shim.createPlatformModule(exports);
+
+  app = express();
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.post('/', function (req, res) {
+    var data = req.body,
+      room = data.item.room.id,
+      sender = data.item.message.from.id,
+      senderName = data.message.from.name,
+      type = data.item.message.type,
+      messg = data.item.message.message;
+
+      if (type == "message") {
+        var event = shim.createEvent(room, sender, senderName, messg);
+        callback(platform, event);
+      }
+  });
+  server = app.listen(this.config.port);
+
   hipchatter.create_webhook(exports.config.hipchat_room, hookConfig, function(err, wh){
     if (err) {
       throw 'Failed to create webhook.';
@@ -58,5 +99,9 @@ exports.stop = function() {
       throw 'Could not delete the webhook.';
     }
     webhook = null;
+    server.close();
+    server = null;
+    app = null;
+    platform = null;
   });
 };
