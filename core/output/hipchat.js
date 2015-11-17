@@ -5,7 +5,8 @@ var HipChatter = require('hipchatter'),
   app = null,
   server = null,
 	shim = require("../shim.js"),
-  platform = null;
+  platform = null,
+	bodyParser  = require("body-parser");
 
 exports.sendMessage = function(message, thread) {
   var notifyConfig = {
@@ -16,6 +17,7 @@ exports.sendMessage = function(message, thread) {
 
   hipchatter.notify(thread, notifyConfig, function(err){
       if (err) {
+        console.error(err);
         throw 'Failed to send message to room.';
       }
   });
@@ -60,7 +62,7 @@ exports.start = function(callback) {
   hipchatter = new HipChatter(exports.config.hipchat_auth_token);
   var hookConfig = {
     url: exports.config.hipchat_server_url,
-    pattern: '*',
+    pattern: '.*',
     event: 'room_message',
     name: 'kassy_webhook'
   };
@@ -87,6 +89,7 @@ exports.start = function(callback) {
 
   hipchatter.create_webhook(exports.config.hipchat_room, hookConfig, function(err, wh){
     if (err) {
+      console.error(err);
       throw 'Failed to create webhook.';
     }
     webhook = wh;
@@ -96,6 +99,7 @@ exports.start = function(callback) {
 exports.stop = function() {
   hipchatter.delete_webhook(exports.config.hipchat_room, webhook.id, function(err) {
     if (err) {
+      console.error(err);
       throw 'Could not delete the webhook.';
     }
     webhook = null;
