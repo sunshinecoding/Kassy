@@ -6,21 +6,13 @@ var HipChatter = require('hipchatter'),
   server = null,
 	shim = require("../shim.js"),
   platform = null,
-	bodyParser  = require("body-parser");
+	bodyParser  = require("body-parser"),
+  wobot = require('wobot'),
+  bot = null,
+  packageInfo = require('../../package.json');
 
 exports.sendMessage = function(message, thread) {
-  var notifyConfig = {
-    message: message,
-    color: exports.config.hipchat_color ? exports.config.hipchat_color : 'green',
-    token: exports.config.hipchat_auth_token
-  };
-
-  hipchatter.notify(thread, notifyConfig, function(err){
-      if (err) {
-        console.error(err);
-        throw 'Failed to send message to room.';
-      }
-  });
+  bot.message(thread, message);
 };
 
 exports.sendUrl = function(url, thread) {
@@ -49,63 +41,24 @@ exports.sendFile = function(type, file, description, thread) {
   }
 };
 
-exports.setTitle = function(title, thread) {
-  hipchatter.set_topic(thread, title, function (err) {
-    if (err) {
-      exports.sendMessage('Something went wrong setting the title of the chat...', thread);
-      console.error(err);
-    }
-  });
-};
-
 exports.start = function(callback) {
-  hipchatter = new HipChatter(exports.config.hipchat_auth_token);
-  var hookConfig = {
-    url: exports.config.hipchat_server_url,
-    pattern: '.*',
-    event: 'room_message',
-    name: 'kassy_webhook'
-  };
+  bot = new wobot.Bot({
+    jid: exports.config.hipchat_jid + '/bot',
+    password: exports.config.password,
+    caps_ver: packageInfo.name.toProperCase()
+  });
 
   platform = shim.createPlatformModule(exports);
 
-  app = express();
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.post('/', function (req, res) {
-    var data = req.body,
-      room = data.item.room.id,
-      sender = data.item.message.from.id,
-      senderName = data.message.from.name,
-      type = data.item.message.type,
-      messg = data.item.message.message;
-
-      if (type == "message") {
-        var event = shim.createEvent(room, sender, senderName, messg);
-        callback(platform, event);
-      }
+  bot.onMessage('.*', function(room, from, message) {
+    var event = shim.createEvent(room, from, from, message);
+    callback(platform, event);
   });
-  server = app.listen(this.config.port);
 
-  hipchatter.create_webhook(exports.config.hipchat_room, hookConfig, function(err, wh){
-    if (err) {
-      console.error(err);
-      throw 'Failed to create webhook.';
-    }
-    webhook = wh;
-  });
+  bot.connect();
 };
 
 exports.stop = function() {
-  hipchatter.delete_webhook(exports.config.hipchat_room, webhook.id, function(err) {
-    if (err) {
-      console.error(err);
-      throw 'Could not delete the webhook.';
-    }
-    webhook = null;
-    server.close();
-    server = null;
-    app = null;
-    platform = null;
-  });
+  bot.disconnect();
+  bot = null;
 };
