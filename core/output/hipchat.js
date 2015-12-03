@@ -1,18 +1,11 @@
-var HipChatter = require('hipchatter'),
-  hipchatter = null,
-  webhook = null,
-  express = require('express'),
-  app = null,
-  server = null,
-	shim = require("../shim.js"),
-  platform = null,
-	bodyParser  = require("body-parser"),
-  wobot = require('wobot'),
-  bot = null,
-  packageInfo = require('../../package.json');
+var Client = require('node-xmpp-client'),
+	client = null,
+	shim = require('../shim.js'),
+	packageInfo = require('../../package.json');
 
 exports.sendMessage = function(message, thread) {
-  bot.message(thread, message);
+	var stanza = new Client.Stanza('message', {to: thread, type: 'chat'}).c('body').t(message);
+	client.send(stanza);
 };
 
 exports.sendUrl = function(url, thread) {
@@ -42,23 +35,25 @@ exports.sendFile = function(type, file, description, thread) {
 };
 
 exports.start = function(callback) {
-  bot = new wobot.Bot({
-    jid: exports.config.hipchat_jid + '/bot',
-    password: exports.config.password,
-    caps_ver: packageInfo.name.toProperCase()
-  });
+	client = new Client({
+		jid: exports.config.hipchat_id,
+		password: exports.config.password
+	});
 
-  platform = shim.createPlatformModule(exports);
+	client.on('stanza', function(stanza) {
+		if (stanza.is('message') && stanza.attrs.type === 'chat') {
+			var body = stanza.getChildText('body'),
+				threadId = exports.config.hipchat_id,
+				senderId = stanza.attrs.from,
+				senderName = senderId;
 
-  bot.onMessage('.*', function(room, from, message) {
-    var event = shim.createEvent(room, from, from, message);
-    callback(platform, event);
-  });
-
-  bot.connect();
+			var event = shim.createEvent(threadId, senderId, senderName, body);
+			callback(api, event);
+		}
+	});
 };
 
 exports.stop = function() {
-  bot.disconnect();
-  bot = null;
+  client.end();
+  client = null;
 };
