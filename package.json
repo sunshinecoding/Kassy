@@ -5,6 +5,10 @@
   "main": "main.js",
   "dependencies": {
     "async": "*",
+    "babel": "^6.3.26",
+    "babel-plugin-transform-strict-mode": "^6.3.13",
+    "babel-polyfill": "^6.3.14",
+    "babel-register": "^6.3.13",
     "colors": "^1.1.2",
     "descrevit": "git+https://github.com/mrkno/descrevit.git",
     "facebook-chat-api": "1.0.2",
@@ -12,17 +16,17 @@
     "git-pull": "*",
     "quarantine": "*",
     "redwrap": "*",
-    "request": "*",
+    "request": "2.54.0",
     "require-install": "*",
-    "sleep": "*",
     "skyweb": "0.0.2",
-    "ws": "^0.8.0",
-    "stripcolorcodes": "0.1.0"
+    "sleep": "*",
+    "stripcolorcodes": "0.1.0",
+    "ws": "^0.8.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node main.js"
+    "start": "node main.js debug test"
   },
   "repository": {
     "type": "git",
@@ -33,5 +37,8 @@
   "bugs": {
     "url": "https://github.com/mrkno/Kassy/issues"
   },
-  "homepage": "https://github.com/mrkno/Kassy"
+  "homepage": "https://github.com/mrkno/Kassy",
+  "babel" : {
+    "plugins": ["transform-strict-mode"]
+  }
 }
