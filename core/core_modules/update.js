@@ -1,12 +1,11 @@
-var gitpull = require.safe('git-pull'),
-	path = require('path');
+var gitpull = require.safe('git-pull');
 
 exports.match = function(text, commandPrefix) {
 	return text === commandPrefix + 'update';
 };
 
 exports.run = function(api, event) {
-	var fp = path.resolve(__dirname, '../../');
+	var fp = path.resolve(__dirname, '../');
 	gitpull(fp, function (err, consoleOutput) {
 		if (err) {
 			api.sendMessage('Update failed. Manual intervention is probably required.', event.thread_id);
