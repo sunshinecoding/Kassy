@@ -23,7 +23,9 @@
     "stripcolorcodes": "0.1.0",
     "ws": "^0.8.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-core": "~6.3.26"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node main.js debug test"
@@ -38,7 +40,12 @@
     "url": "https://github.com/mrkno/Kassy/issues"
   },
   "homepage": "https://github.com/mrkno/Kassy",
-  "babel" : {
-    "plugins": ["transform-strict-mode"]
+  "babel": {
+    "plugins": [
+      "transform-strict-mode"
+    ],
+    "presets": [
+      "es2015"
+    ]
   }
 }
