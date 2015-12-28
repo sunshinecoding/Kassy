@@ -93,7 +93,6 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
             }
         }
         data = JSON.stringify(data);
-        return;
         request.post({url: githubAPI, headers: {'Authorization' : 'token ' + token, 'content-type' : 'application/json', 'User-Agent' : 'Kassy'}, body: data}, function(error, response, body) {
             body = JSON.parse(body);
             if (response.statusCode === 201 && body && body.html_url) {
