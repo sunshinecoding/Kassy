@@ -11,7 +11,7 @@
 
 const command = "issue",
     githubAPI = "https://api.github.com/repos/mrkno/Kassy/issues",
-    token = 'd58a6df93d4651f69dab0009a8fc62f9926c863a';
+    token = 'ZWZkN2ZiMGY2OWViZDlkNmQyZmE0Yzc4ODFjNTkyY2JmNmQxYTljNA==';
 
 let request = require.safe('request'),
     fs = require('fs'),
@@ -53,6 +53,7 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
             cache = null;
         }
         if (debugLevel === 'detail' || debugLevel === 'full') {
+            let stats = null;
             if (config && config !== null) {
                 data.body += "\nconfig: ";
                 for (let key in config) {
@@ -61,8 +62,12 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
                     }
                 }
             }
-            let stats = fs.statSync('kassy.log');
-            if (stats && stats.isFile()) {
+            try{
+                stats = fs.statSync(filePath);
+            }catch(err){
+                //if file does not exist.
+            }
+            if (stats && stats !== null && stats.isFile()) {
                 let file = fs.readFileSync('kassy.log', 'utf-8');
                 if (file) {
                     let lines = file.trim().split('\n'),
@@ -93,7 +98,8 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
             }
         }
         data = JSON.stringify(data);
-        request.post({url: githubAPI, headers: {'Authorization' : 'token ' + token, 'content-type' : 'application/json', 'User-Agent' : 'Kassy'}, body: data}, function(error, response, body) {
+        let stringToken = new Buffer(token, encoding='base64').toString("utf-8");
+        request.post({url: githubAPI, headers: {'Authorization' : 'token ' + stringToken, 'content-type' : 'application/json', 'User-Agent' : 'Kassy'}, body: data}, function(error, response, body) {
             body = JSON.parse(body);
             if (response.statusCode === 201 && body && body.html_url) {
                 callback({link: body.html_url});
