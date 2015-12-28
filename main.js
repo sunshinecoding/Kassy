@@ -28,29 +28,29 @@ var consolec = require('./core/unsafe/console.js'),
     modesf = require('./core/modes.js'),
     startup = require('./core/startup.js'),
     modes = modesf.listModes(),
-    args = process.argv;
+    arguments = process.argv;
 
-args.splice(0, 2);
+arguments.splice(0, 2);
 
 // Determine if debug output is enabled
-if (args[0] === 'debug') {
+if (arguments[0] === 'debug') {
     console.warn('Debug mode enabled.');
-    args.splice(0, 1);
+    arguments.splice(0, 1);
     consolec.setDebug(true);
 }
 
 // Determine if logging output is enabled
-if (args[0] === 'log') {
+if (arguments[0] === 'log') {
     console.warn('Logging mode enabled.');
-    args.splice(0, 1);
+    arguments.splice(0, 1);
     consolec.setLog(true);
 }
 
 // Check startup modes
-for (var i = 0; i < args.length; i++) {
-    args[i] = args[i].toLowerCase();
-    if (!modes.includes(args[i])) {
-        console.error(('Unknown mode \'' + args[i] + '\''));
+for (var i = 0; i < arguments.length; i++) {
+    arguments[i] = arguments[i].toLowerCase();
+    if (!modes.includes(arguments[i])) {
+        console.error(('Unknown mode \'' + arguments[i] + '\''));
         console.info('The modes avalible on your system are:');
         for (var i = 0; i < modes.length; i++) {
             console.info('\t- \'' + modes[i] + '\'');
@@ -59,9 +59,9 @@ for (var i = 0; i < args.length; i++) {
     }
 }
 
-if (!args || args.length == 0) {
+if (!arguments || arguments.length == 0) {
     console.info('No mode specified, defaulting to \'test\'.');
-    args.push('test');
+    arguments.push('test');
 }
 
 process.on('uncaughtException', function(err) {
@@ -74,4 +74,4 @@ process.on('uncaughtException', function(err) {
     console.critical(err);
 });
 
-startup.run(args);
+startup.run(arguments);
