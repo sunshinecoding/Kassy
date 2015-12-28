@@ -9,20 +9,26 @@
  *		Copyright (c) Dion Woolley and Contributors 2016.
  */
 
-var command = "issue",
+const command = "issue",
     githubAPI = "https://api.github.com/repos/mrkno/Kassy/issues",
-    token = 'd58a6df93d4651f69dab0009a8fc62f9926c863a',
+    token = 'd58a6df93d4651f69dab0009a8fc62f9926c863a';
 
-    request = require.safe('request'),
-    config = require.once('../../config.json'),
-    util = require('util'),
+let request = require.safe('request'),
     fs = require('fs'),
+    config = null;
 
-    submitRequest = function(title, description, debugLevel, callback, waitCallback) {
+try {
+    config = require.once('../../config.json');
+}
+catch (e) {
+    //If config file does not exist.
+}
+
+let submitRequest = function(title, description, debugLevel, callback, waitCallback) {
 
         waitCallback();
 
-        var data = {title: title},
+        let data = {title: title},
             debugData = null;
 
         if (description !== null) {
@@ -32,7 +38,7 @@ var command = "issue",
             data.body = '';
         }
         if (debugLevel === 'full') {
-            var cache = [];
+            let cache = [];
             data.body += "\nfull debug details: " + JSON.stringify(this, function (key, value) {
                     if (typeof value === 'object' && value !== null) {
                         if (cache.indexOf(value) !== -1) {
@@ -47,19 +53,21 @@ var command = "issue",
             cache = null;
         }
         if (debugLevel === 'detail' || debugLevel === 'full') {
-            data.body += "\nconfig: ";
-            for (var key in config) {
-                if (key !== 'output') {
-                    data.body += key + ":" + JSON.stringify(config[key], null, 4);
+            if (config && config !== null) {
+                data.body += "\nconfig: ";
+                for (let key in config) {
+                    if (key !== 'output') {
+                        data.body += key + ":" + JSON.stringify(config[key], null, 4);
+                    }
                 }
             }
-            var stats = fs.statSync('kassy.log');
+            let stats = fs.statSync('kassy.log');
             if (stats && stats.isFile()) {
-                var file = fs.readFileSync('kassy.log', 'utf-8');
+                let file = fs.readFileSync('kassy.log', 'utf-8');
                 if (file) {
-                    var lines = file.trim().split('\n'),
+                    let lines = file.trim().split('\n'),
                         log = '\nlog file last 30 lines:\n';
-                    for (var i = 29; i >= 0; i--) {
+                    for (let i = 29; i >= 0; i--) {
                         if (ifStringNotEmpty(lines[lines.length - i])) {
                             log += "\t" + lines[lines.length - i] + "\n";
                         }
@@ -70,22 +78,22 @@ var command = "issue",
         }
         if (debugLevel === 'basic' || debugLevel === 'detail') {
             data.body += "\nloaded modules: ";
-            for (var i = 0; i < this.loadedModules.length; i++) {
+            for (let i = 0; i < this.loadedModules.length; i++) {
                 data.body += this.loadedModules[i].name + ", ";
             }
             data.body += '\nstatus flag: ' + this.statusFlag;
             data.body += '\ncore modules: ';
-            for (var i = 0; i < this.coreModules.length; i++) {
+            for (let i = 0; i < this.coreModules.length; i++) {
                 data.body += this.coreModules[i].name + ", ";
             }
 
             data.body += "\nmodes: ";
-            for (var i = 0; i < this.modes.length; i++) {
+            for (let i = 0; i < this.modes.length; i++) {
                 data.body += this.modes[i].name + ", ";
             }
         }
         data = JSON.stringify(data);
-
+        return;
         request.post({url: githubAPI, headers: {'Authorization' : 'token ' + token, 'content-type' : 'application/json', 'User-Agent' : 'Kassy'}, body: data}, function(error, response, body) {
             body = JSON.parse(body);
             if (response.statusCode === 201 && body && body.html_url) {
@@ -107,15 +115,15 @@ exports.match = (text, commandPrefix) => {
 };
 
 exports.run = function(api, event) {
-    var input = event.body.split('"'),
+    let input = event.body.split('"'),
         title = null,
         description = null,
         debugLevel = 'basic';
 
     if (input.length !== 3 && input.length !== 5) {
-        var help = '',
+        let help = '',
             helpMessages = exports.help(api);
-        for (var j = 0; j < helpMessages.length; j++) {
+        for (let j = 0; j < helpMessages.length; j++) {
             help += '→ ' + helpMessages[j][0] + '\n\t' + helpMessages[j][1] + '\n';
         }
         api.sendMessage("You didn't do that right\n" + help, event.thread_id);
@@ -136,14 +144,13 @@ exports.run = function(api, event) {
             debugLevel = input[2].trim();
         }
     }
-
     submitRequest.call(this, title, description, debugLevel, result => {
         if (result.error) {
             api.sendMessage(result.error, event.thread_id);
             return;
         }
 
-        var link = result.link;
+        let link = result.link;
         if (link) {
             api.sendUrl(link, event.thread_id);
         }
