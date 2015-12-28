@@ -18,11 +18,8 @@
  *        MIT License. All code unless otherwise specified is
  *        Copyright (c) Matthew Knox and Contributors 2015.
  */
-'use strict';
+
 // Load NodeJS Modifications/Variables
-require('babel-core');
-require('babel-register');
-require('babel-polyfill');
 require('./core/require.js');
 require('./core/prototypes.js');
 require('./core/status.js');

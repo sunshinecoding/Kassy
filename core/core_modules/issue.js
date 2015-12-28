@@ -9,11 +9,10 @@
  *		Copyright (c) Dion Woolley and Contributors 2016.
  */
 
-const command = "issue",
+var command = "issue",
     githubAPI = "https://api.github.com/repos/mrkno/Kassy/issues",
-    token = 'ZWZkN2ZiMGY2OWViZDlkNmQyZmE0Yzc4ODFjNTkyY2JmNmQxYTljNA==';
-
-let request = require.safe('request'),
+    token = 'ZWZkN2ZiMGY2OWViZDlkNmQyZmE0Yzc4ODFjNTkyY2JmNmQxYTljNA==',
+    request = require.safe('request'),
     fs = require('fs'),
     config = null;
 
@@ -24,11 +23,11 @@ catch (e) {
     //If config file does not exist.
 }
 
-let submitRequest = function(title, description, debugLevel, callback, waitCallback) {
+var submitRequest = function(title, description, debugLevel, callback, waitCallback) {
 
         waitCallback();
 
-        let data = {title: title},
+        var data = {title: title},
             debugData = null;
 
         if (description !== null) {
@@ -38,7 +37,7 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
             data.body = '';
         }
         if (debugLevel === 'full') {
-            let cache = [];
+            var cache = [];
             data.body += "\nfull debug details: " + JSON.stringify(this, function (key, value) {
                     if (typeof value === 'object' && value !== null) {
                         if (cache.indexOf(value) !== -1) {
@@ -53,10 +52,10 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
             cache = null;
         }
         if (debugLevel === 'detail' || debugLevel === 'full') {
-            let stats = null;
+            var stats = null;
             if (config && config !== null) {
                 data.body += "\nconfig: ";
-                for (let key in config) {
+                for (var key in config) {
                     if (key !== 'output') {
                         data.body += key + ":" + JSON.stringify(config[key], null, 4);
                     }
@@ -68,11 +67,11 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
                 //if file does not exist.
             }
             if (stats && stats !== null && stats.isFile()) {
-                let file = fs.readFileSync('kassy.log', 'utf-8');
+                var file = fs.readFileSync('kassy.log', 'utf-8');
                 if (file) {
-                    let lines = file.trim().split('\n'),
+                    var lines = file.trim().split('\n'),
                         log = '\nlog file last 30 lines:\n';
-                    for (let i = 29; i >= 0; i--) {
+                    for (var i = 29; i >= 0; i--) {
                         if (ifStringNotEmpty(lines[lines.length - i])) {
                             log += "\t" + lines[lines.length - i] + "\n";
                         }
@@ -83,22 +82,22 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
         }
         if (debugLevel === 'basic' || debugLevel === 'detail') {
             data.body += "\nloaded modules: ";
-            for (let i = 0; i < this.loadedModules.length; i++) {
+            for (var i = 0; i < this.loadedModules.length; i++) {
                 data.body += this.loadedModules[i].name + ", ";
             }
             data.body += '\nstatus flag: ' + this.statusFlag;
             data.body += '\ncore modules: ';
-            for (let i = 0; i < this.coreModules.length; i++) {
+            for (var i = 0; i < this.coreModules.length; i++) {
                 data.body += this.coreModules[i].name + ", ";
             }
 
             data.body += "\nmodes: ";
-            for (let i = 0; i < this.modes.length; i++) {
+            for (var i = 0; i < this.modes.length; i++) {
                 data.body += this.modes[i].name + ", ";
             }
         }
         data = JSON.stringify(data);
-        let stringToken = new Buffer(token, encoding='base64').toString("utf-8");
+        var stringToken = new Buffer(token, encoding='base64').toString("utf-8");
         request.post({url: githubAPI, headers: {'Authorization' : 'token ' + stringToken, 'content-type' : 'application/json', 'User-Agent' : 'Kassy'}, body: data}, function(error, response, body) {
             body = JSON.parse(body);
             if (response.statusCode === 201 && body && body.html_url) {
@@ -111,24 +110,24 @@ let submitRequest = function(title, description, debugLevel, callback, waitCallb
         });
     },
 
-    ifStringNotEmpty = str => {
+    ifStringNotEmpty = function(str) {
         return str && str.trim(). length !== 0;
     };
 
-exports.match = (text, commandPrefix) => {
+exports.match = function(text, commandPrefix) {
     return text.startsWith(commandPrefix + command);
 };
 
 exports.run = function(api, event) {
-    let input = event.body.split('"'),
+    var input = event.body.split('"'),
         title = null,
         description = null,
         debugLevel = 'basic';
 
     if (input.length !== 3 && input.length !== 5) {
-        let help = '',
+        var help = '',
             helpMessages = exports.help(api);
-        for (let j = 0; j < helpMessages.length; j++) {
+        for (var j = 0; j < helpMessages.length; j++) {
             help += '→ ' + helpMessages[j][0] + '\n\t' + helpMessages[j][1] + '\n';
         }
         api.sendMessage("You didn't do that right\n" + help, event.thread_id);
@@ -149,13 +148,13 @@ exports.run = function(api, event) {
             debugLevel = input[2].trim();
         }
     }
-    submitRequest.call(this, title, description, debugLevel, result => {
+    submitRequest.call(this, title, description, debugLevel, function(result) {
         if (result.error) {
             api.sendMessage(result.error, event.thread_id);
             return;
         }
 
-        let link = result.link;
+        var link = result.link;
         if (link) {
             api.sendUrl(link, event.thread_id);
         }
@@ -163,12 +162,12 @@ exports.run = function(api, event) {
             api.sendMessage("Something went very wrong.", event.thread_id);
         }
     },
-    () => {
+    function() {
         api.sendTyping(event.thread_id);
     });
 };
 
-exports.help = api => {
+exports.help = function(api) {
   return [[api.commandPrefix + 'issue "<title>" <debugLevel>', "posts an issue to github"],
       [api.commandPrefix + 'issue "<title>" "<description>" <debugLevel>', "posts an issue to github with a description"],
         ['debugLevel can be basic, detail or full', 'defaults to basic if not specified']];
